@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body {
+                background-image: url('../static/pic/gear_background.jpg');
+                background-size: cover;
+            }
+
+            .title {
+                padding-top: 30px;
+                text-align: center;
+                font-weight: bold;
+            }
+
+            .state {
+                text-align: center;
+                padding-top: 0px;
+                font-size: large;
+            }
+
+            .box {
+                margin-top: 100px;
+                margin-left: 15%;
+                width: 70%;
+                height:550px;
+                background-color: aliceblue;
+                filter:Alpha(Opacity=98);
+                opacity: 0.98;
+            }
+
+            #normal {
+                color:springgreen
+            }
+
+            #abnormal {
+                color:red
+            }
+
+            #normal_accuracy {
+                color:cornflowerblue
+            }
+
+            #abnormal_accuracy {
+                color:coral
+            }
+
+            #freq_pic {
+                padding-top: 80px;
+                padding-left: 290px;
+            }
+
+            #button_div {
+                padding-top: 10px;
+                text-align: center;
+            }
+
+            #button {
+                width: 150px;
+                height: 50px;
+                color:lightcoral;
+                border-radius: 5px;
+                font-size: 20px;
+                font-weight: bold;
+                font-family:Arial, Helvetica, sans-serif;
+            }
+        </style>
+        <script>
+            var freq_doamin = [];
+        </script>
+    </head>
+
+    {% for freq in freqency_domain: %}
+    <script>
+        freq_doamin.push(parseFloat('{{freq}}'));
+    </script>
+    {% endfor %}
+
+    <body>
+        <div class="box">
+            <h1 class="title">齿轮箱运行状态实时监测系统</h1>
+                    {% if state == "正常" %}
+                        <div class="state">
+                            <h2 id="intro">当前状态：<span id="normal" font-weight="bold">{{state}}</h2>
+                        </div>
+                        <script>let lineColor = "rgb(0, 255, 180)", isError = false;</script>
+                    {% elif state %}
+                        <div class="state">
+                            <h2 id="intro">当前状态：<span id="abnormal" font-weight="bold">{{state}}</h2>
+                        </div>
+                        <script>let lineColor = "rgb(255, 0, 180)", isError = true;</script>
+                    {% else %}
+                        <div class="state">
+                            <h2>显示异常</h2>
+                        </div>
+                        <script>let lineColor = "rgb(255, 0, 180)", isError = true;</script>
+                    {% endif %}
+
+                    <div id="button_div"></div>
+                    <canvas id="freq_pic" height="200px", width="500px"></canvas>
+        </div>
+    </body>
+
+    <script>
+        function draw(){
+            var oC = document.getElementById("freq_pic");
+            var gd = oC.getContext('2d');
+            gd.imageSmoothingEnabled = true;
+            var width = oC.width;
+            var height = oC.height;
+            var max = Math.max.apply(null, freq_doamin);
+            let i = 0;
+            
+            drawGrid('#ccc', 10, 10);
+            var intervalId = setInterval(drawline, 2);
+
+            function drawline(){
+                gd.moveTo(width * i / freq_doamin.length, height * (1 - freq_doamin[i] / max));
+                gd.lineTo(width * (i + 1) / freq_doamin.length, height * (1 - freq_doamin[i + 1] / max));
+                gd.linewidth = 0.1;
+                gd.globalAlpha = 0.5;
+                gd.strokeStyle = lineColor;
+                gd.linecap = "round";
+                gd.stroke();
+                i++;
+
+                if (i == freq_doamin.length - 1) {
+                    clearInterval(intervalId);
+                }
+            }
+
+            function drawGrid(color, stepx, stepy) {
+                gd.fillStyle = 'aliceblue';
+                console.log(gd);
+                gd.fillRect(0, 0, gd.canvas.width, gd.canvas.height);
+                gd.lineWidth = 0.5;
+                gd.strokeStyle = color;
+                for (var i = stepx; i < gd.canvas.width; i += stepx) {
+                    gd.beginPath();
+                    gd.moveTo(i, 0);
+                    gd.lineTo(i, gd.canvas.height);
+                    gd.closePath();
+                    gd.stroke();
+                }
+                for (var j = stepy; j < gd.canvas.height; j += stepy) {
+                    gd.beginPath();
+                    gd.moveTo(0, j);
+                    gd.lineTo(gd.canvas.width, j);
+                    gd.closePath();
+                    gd.stroke();
+                }
+
+                gd.beginPath();
+            }
+        }
+
+        window.onload = draw
+
+        function modify() {
+            window.location.reload();
+        }
+
+        if(isError) {
+            var myDiv = document.getElementById("button_div");
+            var button = document.createElement("input");
+            button.setAttribute("type", "button");
+            button.setAttribute("value", "继续监测");
+            button.setAttribute("id", "button");
+            button.setAttribute("onclick","modify()");
+            myDiv.appendChild(button);
+        }
+
+        setTimeout(function(){
+            if(!isError){
+                window.location.reload();
+            }
+        }, 3000)
+    </script>
+</html>
